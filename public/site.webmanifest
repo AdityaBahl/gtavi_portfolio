@@ -1,0 +1,17 @@
+{
+  "name": "Aditya Bahl — Full Stack Developer",
+  "short_name": "Aditya Bahl",
+  "description": "Aditya Bahl's GTA-inspired full stack developer portfolio.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090614",
+  "theme_color": "#090614",
+  "icons": [
+    {
+      "src": "/assets/icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
