@@ -9,7 +9,10 @@ import { NotFound } from "@/pages/NotFound"
 import { AudioProvider } from "@/audio/AudioProvider"
 import { MusicToggle } from "@/components/MusicToggle"
 import { AssetPreloader } from "@/components/AssetPreloader"
+import { inject } from "@vercel/analytics"
 import "./index.css"
+
+inject()
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
