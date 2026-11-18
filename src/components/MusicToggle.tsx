@@ -1,6 +1,6 @@
-import { useState, type ChangeEvent } from "react"
+import { useEffect, useState, type ChangeEvent } from "react"
 import { useAudio } from "@/audio/AudioProvider"
-import { SoundOffIcon, SoundOnIcon } from "./icons"
+import { ResumeIcon, SoundOffIcon, SoundOnIcon } from "./icons"
 
 const MUSIC_HINT_KEY = "gta6-portfolio:music-hint-v2-dismissed"
 
@@ -26,8 +26,19 @@ function dismissMusicHint() {
  * so it persists across route changes.
  */
 export function MusicToggle() {
-  const { musicPlaying, toggleMusic, volume, setVolume } = useAudio()
+  const { musicPlaying, musicStarted, toggleMusic, volume, setVolume } = useAudio()
   const [showHint, setShowHint] = useState(() => !hasSeenMusicHint())
+  const [introVisible, setIntroVisible] = useState(() =>
+    typeof document !== "undefined" && Boolean(document.querySelector(".intro-cover")),
+  )
+
+  useEffect(() => {
+    const update = () => setIntroVisible(Boolean(document.querySelector(".intro-cover")))
+    const observer = new MutationObserver(update)
+    observer.observe(document.body, { childList: true, subtree: true })
+    update()
+    return () => observer.disconnect()
+  }, [])
 
   const onVolumeChange = (event: ChangeEvent<HTMLInputElement>) => {
     setVolume(Number(event.target.value) / 100)
@@ -42,6 +53,8 @@ export function MusicToggle() {
     if (!musicPlaying) toggleMusic()
     dismiss()
   }
+
+  if (introVisible) return null
 
   return (
     <div className="music-control">
@@ -93,7 +106,7 @@ export function MusicToggle() {
         title={musicPlaying ? "Mute music" : "Play music"}
       >
         <span className="music-toggle-icon">
-          {musicPlaying ? <SoundOnIcon /> : <SoundOffIcon />}
+          {musicPlaying ? <SoundOnIcon /> : musicStarted ? <SoundOffIcon /> : <ResumeIcon />}
         </span>
         <span className="music-toggle-bars" aria-hidden="true">
           <i />

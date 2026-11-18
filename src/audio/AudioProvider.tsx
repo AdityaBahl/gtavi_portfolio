@@ -56,6 +56,7 @@ function saveVolume(volume: number) {
 
 type AudioContextValue = {
   musicPlaying: boolean
+  musicStarted: boolean
   toggleMusic: () => void
   playClick: () => void
   volume: number
@@ -72,6 +73,7 @@ const AudioCtx = createContext<AudioContextValue | null>(null)
 export function AudioProvider({ children }: { children: ReactNode }) {
   const musicRef = useRef<HTMLAudioElement | null>(null)
   const [musicPlaying, setMusicPlaying] = useState(false)
+  const [musicStarted, setMusicStarted] = useState(false)
   const [volume, setVolumeState] = useState(() => readVolume())
   // Mirror volume in a ref so callbacks/effects always read the latest value
   // without needing it in their dependency arrays.
@@ -135,7 +137,10 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       audio.volume = volumeRef.current
       audio
         .play()
-        .then(() => setMusicPlaying(true))
+        .then(() => {
+          setMusicPlaying(true)
+          setMusicStarted(true)
+        })
         .catch(() => setMusicPlaying(false))
       saveMuted(false)
     } else {
@@ -153,15 +158,18 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     const muted = readMuted()
     const audio = musicRef.current
     if (audio) {
-      // Preload the full track during the intro. Playback can still be blocked
-      // by browser autoplay policy, but the bytes are ready for first gesture.
+      // Preload the full track before the intro finishes. Playback can still
+      // be blocked by browser policy, but the bytes are ready for first gesture.
       audio.load()
       audio.volume = volumeRef.current
     }
     if (audio && !muted) {
       audio
         .play()
-        .then(() => setMusicPlaying(true))
+        .then(() => {
+          setMusicPlaying(true)
+          setMusicStarted(true)
+        })
         .catch(() => setMusicPlaying(false))
     }
 
@@ -171,12 +179,17 @@ export function AudioProvider({ children }: { children: ReactNode }) {
 
     const unlock = () => {
       void ensureClickReady()
-      // If autoplay was blocked (and the user hasn't muted), start music on the
-      // first interaction.
+      // If autoplay was blocked (and the user hasn't muted), start music on
+      // the first interaction.
       const el = musicRef.current
       if (el && el.paused && !readMuted()) {
         el.volume = volumeRef.current
-        el.play().then(() => setMusicPlaying(true)).catch(() => {})
+        el.play()
+          .then(() => {
+            setMusicPlaying(true)
+            setMusicStarted(true)
+          })
+          .catch(() => {})
       }
     }
     window.addEventListener("pointerdown", unlock, { once: true })
@@ -184,9 +197,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [ensureClickReady])
 
   // Global button-click SFX: one listener for the whole app. Fires the GTA
-  // menu sound for every interactive control. This app renders most "buttons"
-  // as <a>/<Link> elements (nav, CTA buttons, project/experience/hobby cards),
-  // so we match any anchor or button. Opt out via [data-no-click-sound].
+  // menu sound for every interactive control. AudioProvider renders most
+  // "buttons" as <a>/<Link> elements, so match any anchor or button.
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null
@@ -202,8 +214,8 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }, [playClick])
 
   const value = useMemo(
-    () => ({ musicPlaying, toggleMusic, playClick, volume, setVolume }),
-    [musicPlaying, toggleMusic, playClick, volume, setVolume],
+    () => ({ musicPlaying, musicStarted, toggleMusic, playClick, volume, setVolume }),
+    [musicPlaying, musicStarted, toggleMusic, playClick, volume, setVolume],
   )
 
   return (

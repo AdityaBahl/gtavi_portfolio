@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useLocation } from "react-router-dom"
 import { navItems, profile } from "@/data/portfolio"
 import { ArrowIcon } from "./icons"
 
@@ -8,7 +9,35 @@ type HeaderProps = {
 }
 
 export function Header({ onTitleClick }: HeaderProps) {
+  const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [activeHash, setActiveHash] = useState(location.hash || "#home")
+
+  useEffect(() => {
+    setActiveHash(location.hash || "#home")
+  }, [location.hash])
+
+  useEffect(() => {
+    const sections = navItems
+      .map((item) => document.querySelector(item.href))
+      .filter((section): section is Element => Boolean(section))
+
+    const updateActiveSection = () => {
+      if (window.location.pathname !== "/") return
+      const marker = window.scrollY + window.innerHeight * 0.28
+      let current = "#home"
+      for (const section of sections) {
+        if ((section as HTMLElement).offsetTop <= marker) {
+          current = `#${section.id}`
+        }
+      }
+      setActiveHash(current)
+    }
+
+    updateActiveSection()
+    window.addEventListener("scroll", updateActiveSection, { passive: true })
+    return () => window.removeEventListener("scroll", updateActiveSection)
+  }, [])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -42,10 +71,10 @@ export function Header({ onTitleClick }: HeaderProps) {
         </button>
 
         <nav className="hidden items-center gap-8 text-[11px] font-bold uppercase tracking-[0.2em] md:flex">
-          {navItems.map((item, index) => (
+          {navItems.map((item) => (
             <a
               key={item.href}
-              className={`nav-link ${index === 0 ? "active" : ""}`}
+              className={`nav-link ${activeHash === item.href ? "active" : ""}`}
               href={item.href}
             >
               {item.label}
@@ -85,7 +114,12 @@ export function Header({ onTitleClick }: HeaderProps) {
         <div id="mobile-navigation" className="mobile-navigation">
           <nav aria-label="Mobile navigation">
             {navItems.map((item) => (
-              <a key={item.href} href={item.href} onClick={closeMenu}>
+              <a
+                key={item.href}
+                className={activeHash === item.href ? "active" : ""}
+                href={item.href}
+                onClick={closeMenu}
+              >
                 {item.label}
                 <ArrowIcon />
               </a>

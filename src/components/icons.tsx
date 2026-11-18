@@ -64,3 +64,17 @@ export function SoundOffIcon() {
     </svg>
   )
 }
+
+export function ResumeIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+      <path
+        d="M9 7.5 16.5 12 9 16.5v-9Z"
+        fill="currentColor"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
